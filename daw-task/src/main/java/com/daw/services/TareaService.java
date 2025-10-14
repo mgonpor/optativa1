@@ -19,7 +19,6 @@ public class TareaService {
 	// findById
 	// save (crear y actualizar)
 	// deleteById
-
 	// existsById (nos devuelve true si existe la tarea con esa ID)
 
 	@Autowired
@@ -97,5 +96,33 @@ public class TareaService {
 		tarea.setEstado(Estado.EN_PROGRESO);
 		return this.tareaRepository.save(tarea);
 	}
+	
+//	Obtener las tareas pendientes.
+	public List<Tarea> pendientes() {
+		return this.tareaRepository.findByEstado(Estado.PENDIENTE);
+	}
+	
+//	Obtener las tareas en progreso.
+	public List<Tarea> enProgreso() {
+		return this.tareaRepository.findByEstado(Estado.EN_PROGRESO);
+	}
+//	Obtener las tareas completadas.
+	public List<Tarea> completadas() {
+		return this.tareaRepository.findByEstado(Estado.COMPLETADA);
+	}
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
