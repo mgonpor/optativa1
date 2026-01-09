@@ -43,6 +43,12 @@ public class TareaService {
 		if (tarea.getFechaVencimiento().isBefore(LocalDate.now())) {
 			throw new TareaException("La fecha de vencimiento debe ser posterior. ");
 		}
+		if (tarea.getEstado() != null) {
+			throw new TareaException("No se puede modificar el estado. ");
+		}
+		if (tarea.getFechaCreacion() != null) {
+			throw new TareaException("No se puede modificar la fecha de creación. ");
+		}
 
 		tarea.setId(0);
 		tarea.setEstado(Estado.PENDIENTE);
