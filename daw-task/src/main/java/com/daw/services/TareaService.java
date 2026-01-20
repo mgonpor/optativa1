@@ -144,6 +144,7 @@ public class TareaService {
 		if (!perteneceTarea(idTarea)) {
 			throw new TareaSecurityException("La tarea no pertenece al usuario");
 		}
+		return this.findById(idTarea);
 	}
 
 	//aux
