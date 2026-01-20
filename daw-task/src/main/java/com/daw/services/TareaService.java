@@ -3,7 +3,11 @@ package com.daw.services;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.daw.persistence.entities.Usuario;
+import com.daw.services.exceptions.TareaSecurityException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.daw.persistence.entities.Estado;
@@ -23,6 +27,11 @@ public class TareaService {
 
 	@Autowired
 	private TareaRepository tareaRepository;
+
+	@Autowired
+	private UsuarioService usuarioService;
+
+	// ADMIN
 
 	// findAll
 	public List<Tarea> findAll() {
@@ -117,18 +126,32 @@ public class TareaService {
 		return this.tareaRepository.findByEstado(Estado.COMPLETADA);
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+	// USER
+
+	//findAll
+	public List<Tarea> findAllByUser() {
+		if(SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+				.contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+			return this.findAll();
+		}
+		return this.tareaRepository.findByUsuarioUsername(
+				SecurityContextHolder.getContext().getAuthentication().getName());
+	}
+
+	//findById
+	public Tarea findByIdByUser(int idTarea){
+		if (!perteneceTarea(idTarea)) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+	}
+
+	//aux
+	private boolean perteneceTarea(int idTarea) {
+		Usuario u = this.usuarioService.findByUsername(
+				SecurityContextHolder.getContext().getAuthentication().getName());
+		Tarea t = this.findById(idTarea);
+
+		return u.getId() == t.getUsuario().getId() || u.getRol().equals("ADMIN");
+	}
 }

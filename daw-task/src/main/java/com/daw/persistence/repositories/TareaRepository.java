@@ -10,6 +10,10 @@ import com.daw.persistence.entities.Tarea;
 public interface TareaRepository extends ListCrudRepository<Tarea, Integer> {
 	
 	List<Tarea> findByEstado(Estado estado);
+
+	List<Tarea> findByIdUsuario(int idUsuario);
+
+	List<Tarea> findByUsuarioUsername(String username);
 	
 //	Obtener las tareas vencidas (fecha de vencimiento menor que la de hoy).
 //	Obtener las tareas no vencidas (fecha de vencimiento mayor que la de hoy).

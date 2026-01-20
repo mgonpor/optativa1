@@ -26,4 +26,9 @@ public class UsuarioService implements UserDetailsService {
                 .roles(usuario.getRol())
                 .build();
     }
+
+    public Usuario findByUsername(String username) {
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("El usuario " + username + " no se ha encontrado"));
+    }
 }

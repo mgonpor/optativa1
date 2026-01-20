@@ -2,6 +2,7 @@ package com.daw.web.controllers;
 
 import java.util.List;
 
+import com.daw.services.exceptions.TareaSecurityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +29,17 @@ public class TareaController {
 
 	@GetMapping
 	public ResponseEntity<List<Tarea>> list() {
-		return ResponseEntity.ok(this.tareaService.findAll());
+		return ResponseEntity.ok(this.tareaService.findAllByUser());
 	}
 
 	@GetMapping("/{idTarea}")
 	public ResponseEntity<?> findById(@PathVariable int idTarea) {
 		try {
-			return ResponseEntity.ok(this.tareaService.findById(idTarea));
+			return ResponseEntity.ok(this.tareaService.findByIdByUser(idTarea));
 		} catch (TareaNotFoundException ex) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		} catch (TareaSecurityException e){
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		}
 	}
 
@@ -96,18 +99,5 @@ public class TareaController {
 	public ResponseEntity<?> completadas(){
 		return ResponseEntity.ok(this.tareaService.completadas());
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 }
