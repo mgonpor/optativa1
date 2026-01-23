@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.daw.persistence.entities.Usuario;
 import com.daw.services.exceptions.TareaSecurityException;
+import com.daw.services.exceptions.UsuarioNotFound;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +33,6 @@ public class TareaService {
 	private UsuarioService usuarioService;
 
 	// ADMIN
-
 	// findAll
 	public List<Tarea> findAll() {
 		return this.tareaRepository.findAll();
@@ -58,10 +58,13 @@ public class TareaService {
 		if (tarea.getFechaCreacion() != null) {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
 		}
+		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
+			throw new UsuarioNotFound("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
+		}
 
 		tarea.setId(0);
-		tarea.setEstado(Estado.PENDIENTE);
 		tarea.setFechaCreacion(LocalDate.now());
+		tarea.setEstado(Estado.PENDIENTE);
 
 		return this.tareaRepository.save(tarea);
 	}
@@ -80,6 +83,9 @@ public class TareaService {
 		}
 		if (tarea.getFechaCreacion() != null) {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
+		}
+		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
+			throw new UsuarioNotFound("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
 		}
 
 		// Recupero la tarea que está en BBDD y modifico solo los campos permitidos.
@@ -101,8 +107,18 @@ public class TareaService {
 		this.tareaRepository.deleteById(idTarea);
 	}
 
+	// --------------
+	// ADMIN y USER
+
 	public Tarea marcarEnProgreso(int idTarea) {
 		Tarea tarea = this.findById(idTarea);
+		// comprobar que sea el usuario o admin
+		if (!perteneceTarea(idTarea) ||
+						this.usuarioService.findByUsername(
+							SecurityContextHolder.getContext().getAuthentication().getName())
+						.getRol().equals("ADMIN")) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
 
 		if (!tarea.getEstado().equals(Estado.PENDIENTE)) {
 			throw new TareaException("La tarea ya está completada o ya está en progreso");
@@ -126,7 +142,7 @@ public class TareaService {
 		return this.tareaRepository.findByEstado(Estado.COMPLETADA);
 	}
 
-
+	// --------------
 	// USER
 
 	//findAll
@@ -147,12 +163,16 @@ public class TareaService {
 		return this.findById(idTarea);
 	}
 
-	//aux
+//	public Tarea createByUser(Tarea tarea){
+//
+//	}
+
+	//aux solo USER
 	private boolean perteneceTarea(int idTarea) {
 		Usuario u = this.usuarioService.findByUsername(
 				SecurityContextHolder.getContext().getAuthentication().getName());
 		Tarea t = this.findById(idTarea);
 
-		return u.getId() == t.getUsuario().getId() || u.getRol().equals("ADMIN");
+		return u.getId() == t.getUsuario().getId();
 	}
 }

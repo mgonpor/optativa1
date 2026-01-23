@@ -6,14 +6,7 @@ import com.daw.services.exceptions.TareaSecurityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.daw.persistence.entities.Tarea;
 import com.daw.services.TareaService;
@@ -27,23 +20,22 @@ public class TareaController {
 	@Autowired
 	private TareaService tareaService;
 
-	@GetMapping
-	public ResponseEntity<List<Tarea>> list() {
-		return ResponseEntity.ok(this.tareaService.findAllByUser());
+	// ADMIN
+	@GetMapping("/admin")
+	public ResponseEntity<List<Tarea>> findAll(){
+		return ResponseEntity.ok(tareaService.findAll());
 	}
 
-	@GetMapping("/{idTarea}")
-	public ResponseEntity<?> findById(@PathVariable int idTarea) {
-		try {
-			return ResponseEntity.ok(this.tareaService.findByIdByUser(idTarea));
-		} catch (TareaNotFoundException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-		} catch (TareaSecurityException e){
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+	@GetMapping("/admin/{idTarea}")
+	public ResponseEntity<?> findById(@PathVariable int idTarea){
+		try{
+			return ResponseEntity.ok(tareaService.findById(idTarea));
+		}catch (TareaNotFoundException e){
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
 
-	@PostMapping
+	@PostMapping("/admin")
 	public ResponseEntity<?> create(@RequestBody Tarea tarea) {
 		try {
 			return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
@@ -52,7 +44,7 @@ public class TareaController {
 		}
 	}
 
-	@PutMapping("/{idTarea}")
+	@PutMapping("/admin/{idTarea}")
 	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
 		try {
 			return ResponseEntity.ok(this.tareaService.update(tarea, idTarea));
@@ -63,7 +55,7 @@ public class TareaController {
 		}
 	}
 
-	@DeleteMapping("/{idTarea}")
+	@DeleteMapping("/admin/{idTarea}")
 	public ResponseEntity<?> delete(@PathVariable int idTarea) {
 
 		try {
@@ -74,7 +66,9 @@ public class TareaController {
 		}
 	}
 
-	@PutMapping("/{idTarea}/iniciar")
+	// -----------------
+	// ADMIN y USER
+	@PutMapping("/admin/{idTarea}/iniciar")
 	public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea){
 		try {
 			return ResponseEntity.ok(this.tareaService.marcarEnProgreso(idTarea));
@@ -82,9 +76,9 @@ public class TareaController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
 		} catch (TareaException ex) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-		}		
+		}
 	}
-	
+
 	@GetMapping("/pendientes")
 	public ResponseEntity<?> pendientes(){
 		return ResponseEntity.ok(this.tareaService.pendientes());
@@ -99,5 +93,24 @@ public class TareaController {
 	public ResponseEntity<?> completadas(){
 		return ResponseEntity.ok(this.tareaService.completadas());
 	}
+
+	// -------------
+	//USER
+	@GetMapping
+	public ResponseEntity<List<Tarea>> list() {
+		return ResponseEntity.ok(this.tareaService.findAllByUser());
+	}
+
+	@GetMapping("/{idTarea}")
+	public ResponseEntity<?> findByIdUser(@PathVariable int idTarea) {
+		try {
+			return ResponseEntity.ok(this.tareaService.findByIdByUser(idTarea));
+		} catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		} catch (TareaSecurityException e){
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+		}
+	}
+
 
 }
