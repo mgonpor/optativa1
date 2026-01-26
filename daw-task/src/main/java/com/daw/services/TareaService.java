@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.daw.persistence.entities.Usuario;
 import com.daw.services.exceptions.TareaSecurityException;
-import com.daw.services.exceptions.UsuarioNotFound;
+import com.daw.services.exceptions.UsuarioNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,7 +59,7 @@ public class TareaService {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
 		}
 		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
-			throw new UsuarioNotFound("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
+			throw new UsuarioNotFoundException("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
 		}
 
 		tarea.setId(0);
@@ -85,7 +85,7 @@ public class TareaService {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
 		}
 		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
-			throw new UsuarioNotFound("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
+			throw new UsuarioNotFoundException("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
 		}
 
 		// Recupero la tarea que está en BBDD y modifico solo los campos permitidos.
@@ -106,9 +106,6 @@ public class TareaService {
 		}
 		this.tareaRepository.deleteById(idTarea);
 	}
-
-	// --------------
-	// ADMIN y USER
 
 	public Tarea marcarEnProgreso(int idTarea) {
 		Tarea tarea = this.findById(idTarea);
@@ -142,6 +139,7 @@ public class TareaService {
 		return this.tareaRepository.findByEstado(Estado.COMPLETADA);
 	}
 
+
 	// --------------
 	// USER
 
@@ -163,9 +161,26 @@ public class TareaService {
 		return this.findById(idTarea);
 	}
 
-//	public Tarea createByUser(Tarea tarea){
-//
-//	}
+	public Tarea createByUser(Tarea tarea){
+		if (!perteneceTarea(tarea.getIdUsuario())) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+		return this.create(tarea);
+	}
+
+	public Tarea updateByUser(Tarea tarea, int idTarea){
+		if (!perteneceTarea(idTarea)) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+		return this.update(tarea, idTarea);
+	}
+
+	public void deleteByUser(int idTarea){
+		if (!perteneceTarea(idTarea)) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+		this.delete(idTarea);
+	}
 
 	//aux solo USER
 	private boolean perteneceTarea(int idTarea) {

@@ -14,19 +14,19 @@ import com.daw.services.exceptions.TareaException;
 import com.daw.services.exceptions.TareaNotFoundException;
 
 @RestController
-@RequestMapping("/tareas")
-public class TareaController {
+@RequestMapping("/admin/tareas")
+public class AdminTareaController {
 
 	@Autowired
 	private TareaService tareaService;
 
 	// ADMIN
-	@GetMapping("/admin")
+	@GetMapping
 	public ResponseEntity<List<Tarea>> findAll(){
 		return ResponseEntity.ok(tareaService.findAll());
 	}
 
-	@GetMapping("/admin/{idTarea}")
+	@GetMapping("/{idTarea}")
 	public ResponseEntity<?> findById(@PathVariable int idTarea){
 		try{
 			return ResponseEntity.ok(tareaService.findById(idTarea));
@@ -35,7 +35,7 @@ public class TareaController {
 		}
 	}
 
-	@PostMapping("/admin")
+	@PostMapping
 	public ResponseEntity<?> create(@RequestBody Tarea tarea) {
 		try {
 			return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
@@ -44,7 +44,7 @@ public class TareaController {
 		}
 	}
 
-	@PutMapping("/admin/{idTarea}")
+	@PutMapping("/{idTarea}")
 	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
 		try {
 			return ResponseEntity.ok(this.tareaService.update(tarea, idTarea));
@@ -55,7 +55,7 @@ public class TareaController {
 		}
 	}
 
-	@DeleteMapping("/admin/{idTarea}")
+	@DeleteMapping("/{idTarea}")
 	public ResponseEntity<?> delete(@PathVariable int idTarea) {
 
 		try {
@@ -66,9 +66,7 @@ public class TareaController {
 		}
 	}
 
-	// -----------------
-	// ADMIN y USER
-	@PutMapping("/admin/{idTarea}/iniciar")
+	@PutMapping("/{idTarea}/iniciar")
 	public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea){
 		try {
 			return ResponseEntity.ok(this.tareaService.marcarEnProgreso(idTarea));
@@ -93,24 +91,5 @@ public class TareaController {
 	public ResponseEntity<?> completadas(){
 		return ResponseEntity.ok(this.tareaService.completadas());
 	}
-
-	// -------------
-	//USER
-	@GetMapping
-	public ResponseEntity<List<Tarea>> list() {
-		return ResponseEntity.ok(this.tareaService.findAllByUser());
-	}
-
-	@GetMapping("/{idTarea}")
-	public ResponseEntity<?> findByIdUser(@PathVariable int idTarea) {
-		try {
-			return ResponseEntity.ok(this.tareaService.findByIdByUser(idTarea));
-		} catch (TareaNotFoundException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-		} catch (TareaSecurityException e){
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-		}
-	}
-
 
 }

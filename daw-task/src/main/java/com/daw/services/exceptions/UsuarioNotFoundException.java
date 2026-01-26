@@ -1,7 +1,7 @@
 package com.daw.services.exceptions;
 
-public class UsuarioNotFound extends RuntimeException {
-    public UsuarioNotFound(String message) {
+public class UsuarioNotFoundException extends RuntimeException {
+    public UsuarioNotFoundException(String message) {
         super(message);
     }
 }
