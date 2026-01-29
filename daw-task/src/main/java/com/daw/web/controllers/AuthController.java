@@ -43,6 +43,7 @@ public class AuthController {
     }
 
     //register
+//    public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest request) {}
 
     //refresh
 
