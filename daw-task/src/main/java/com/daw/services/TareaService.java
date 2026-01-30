@@ -106,24 +106,6 @@ public class TareaService {
 		}
 		this.tareaRepository.deleteById(idTarea);
 	}
-
-	public Tarea marcarEnProgreso(int idTarea) {
-		Tarea tarea = this.findById(idTarea);
-		// comprobar que sea el usuario o admin
-		if (!perteneceTarea(idTarea) ||
-						this.usuarioService.findByUsername(
-							SecurityContextHolder.getContext().getAuthentication().getName())
-						.getRol().equals("ADMIN")) {
-			throw new TareaSecurityException("La tarea no pertenece al usuario");
-		}
-
-		if (!tarea.getEstado().equals(Estado.PENDIENTE)) {
-			throw new TareaException("La tarea ya está completada o ya está en progreso");
-		}
-
-		tarea.setEstado(Estado.EN_PROGRESO);
-		return this.tareaRepository.save(tarea);
-	}
 	
 //	Obtener las tareas pendientes.
 	public List<Tarea> pendientes() {
@@ -139,6 +121,43 @@ public class TareaService {
 		return this.tareaRepository.findByEstado(Estado.COMPLETADA);
 	}
 
+	// ------------
+	// ADMIN & USER
+	public Tarea marcarEnProgreso(int idTarea) {
+		Tarea tarea = this.findById(idTarea);
+		// comprobar que sea el usuario o admin
+		if (!perteneceTarea(idTarea) ||
+				this.usuarioService.findByUsername(
+								SecurityContextHolder.getContext().getAuthentication().getName())
+						.getRol().equals("ADMIN")) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+
+		if (!tarea.getEstado().equals(Estado.PENDIENTE)) {
+			throw new TareaException("La tarea ya está completada o ya está en progreso");
+		}
+
+		tarea.setEstado(Estado.EN_PROGRESO);
+		return this.tareaRepository.save(tarea);
+	}
+
+	public Tarea marcarCompletada(int idTarea) {
+		Tarea tarea = this.findById(idTarea);
+		// comprobar que sea el usuario o admin
+		if (!perteneceTarea(idTarea) ||
+				this.usuarioService.findByUsername(
+								SecurityContextHolder.getContext().getAuthentication().getName())
+						.getRol().equals("ADMIN")) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+
+		if (!tarea.getEstado().equals(Estado.EN_PROGRESO)) {
+			throw new TareaException("La tarea ya está completada o ya está en progreso");
+		}
+
+		tarea.setEstado(Estado.COMPLETADA);
+		return this.tareaRepository.save(tarea);
+	}
 
 	// --------------
 	// USER

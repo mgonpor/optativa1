@@ -74,6 +74,21 @@ public class AdminTareaController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
 		} catch (TareaException ex) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+		}catch (TareaSecurityException ex) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+		}
+	}
+
+	@PutMapping("/{idTarea}/completar")
+	public ResponseEntity<?> completarTarea(@PathVariable int idTarea){
+		try{
+			return ResponseEntity.ok(this.tareaService.marcarCompletada(idTarea));
+		}catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		}catch (TareaException ex) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+		}catch (TareaSecurityException ex) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
 		}
 	}
 

@@ -30,8 +30,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/tareas").permitAll()
-                .requestMatchers(HttpMethod.GET, "/tareas/*").authenticated()
+                .requestMatchers(HttpMethod.GET, "/user/*").hasRole("USER")
+                .requestMatchers(HttpMethod.GET, "/admin/*").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults());

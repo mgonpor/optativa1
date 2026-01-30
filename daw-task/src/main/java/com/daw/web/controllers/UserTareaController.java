@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/user/tareas")
 public class UserTareaController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class UserTareaController {
     }
 
     @GetMapping("/{idTarea}")
-    public ResponseEntity<?> findByIdUser(@PathVariable int idTarea) {
+    public ResponseEntity<?> findByIdByUser(@PathVariable int idTarea) {
         try {
             return ResponseEntity.ok(this.tareaService.findByIdByUser(idTarea));
         } catch (TareaNotFoundException ex) {
@@ -72,6 +72,32 @@ public class UserTareaController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }catch (TareaNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{idTarea}/iniciar")
+    public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea){
+        try {
+            return ResponseEntity.ok(this.tareaService.marcarEnProgreso(idTarea));
+        } catch (TareaNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (TareaException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }catch (TareaSecurityException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        }
+    }
+
+    @PutMapping("/{idTarea}/completar")
+    public ResponseEntity<?> completarTarea(@PathVariable int idTarea){
+        try{
+            return ResponseEntity.ok(this.tareaService.marcarCompletada(idTarea));
+        }catch (TareaNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }catch (TareaException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }catch (TareaSecurityException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         }
     }
 
