@@ -23,12 +23,6 @@ public class UsuarioService implements UserDetailsService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtUtils jwtUtil;
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByUsername(username)
@@ -52,34 +46,6 @@ public class UsuarioService implements UserDetailsService {
     public Usuario findByUsername(String username) {
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("El usuario " + username + " no se ha encontrado"));
-    }
-
-    public String registrar(LoginRequest request) {
-        this.create(request.getUsername(), request.getPassword());
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtUtil.generateAccessToken(userDetails);
-
-        return token;
-    }
-
-    public LoginResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        String accessToken = jwtUtil.generateAccessToken(userDetails);
-        String refreshToken = jwtUtil.generateRefreshToken(userDetails);
-
-        return new LoginResponse(accessToken, refreshToken);
-    }
-
-    public LoginResponse refresh(RefreshDTO dto) {
-        String accessToken = jwtUtil.generateAccessToken(dto.getRefresh());
-        String refreshToken = jwtUtil.generateRefreshToken(dto.getRefresh());
-
-        return new LoginResponse(accessToken, refreshToken);
     }
 
 }
