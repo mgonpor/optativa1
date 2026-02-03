@@ -84,7 +84,12 @@ public class TareaService {
 		if (tarea.getFechaCreacion() != null) {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
 		}
-		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
+		if(tarea.getIdUsuario() == 0){
+			Usuario u = this.usuarioService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+			tarea.setUsuario(u);
+			tarea.setIdUsuario(u.getId());
+		}
+		if(!tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
 			throw new UsuarioNotFoundException("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
 		}
 
@@ -162,9 +167,6 @@ public class TareaService {
 	}
 
 	public Tarea createByUser(Tarea tarea){
-		if (!perteneceTarea(tarea.getIdUsuario())) {
-			throw new TareaSecurityException("La tarea no pertenece al usuario");
-		}
 		return this.create(tarea);
 	}
 
