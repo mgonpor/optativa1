@@ -1,0 +1,9 @@
+#services:
+#    db:
+#      image: mariadb:latest
+#      container_name: db
+#      environment:
+#        MYSQL_ROOT_PASSWORD: root
+#        MYSQL_DATABASE: task
+#        MYSQL_USER: root
+#        MYSQL_PASSWORD: root
