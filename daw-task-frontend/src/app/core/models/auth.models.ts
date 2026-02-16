@@ -16,7 +16,7 @@ export interface RefreshDTO {
 // Decoded JWT payload
 export interface JwtPayload {
     sub: string; // username
-    rol: string; // role
+    roles: string[]; // roles
     exp: number; // expiration timestamp
     iat: number; // issued at timestamp
 }

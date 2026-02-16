@@ -21,7 +21,7 @@ export class TaskService {
      * Get appropriate endpoint based on user role
      */
     private getEndpoint(): string {
-        return this.authService.isAdmin() ? `${this.API_URL}/admin/tareas` : `${this.API_URL}/user`;
+        return this.authService.isAdmin() ? `${this.API_URL}/admin/tareas` : `${this.API_URL}/user/tareas`;
     }
 
     /**
@@ -52,13 +52,8 @@ export class TaskService {
         );
     }
 
-    /**
-     * Update a task (admin only)
-     */
     updateTask(id: number, task: UpdateTareaDTO) {
-        const endpoint = this.authService.isAdmin()
-            ? `${this.API_URL}/admin/tareas/${id}`
-            : `${this.API_URL}/user/${id}`;
+        const endpoint = `${this.getEndpoint()}/${id}`;
 
         return this.http.put<Tarea>(endpoint, task).pipe(
             tap(updatedTask => {
@@ -77,9 +72,7 @@ export class TaskService {
      * Delete a task (admin only)
      */
     deleteTask(id: number) {
-        const endpoint = this.authService.isAdmin()
-            ? `${this.API_URL}/admin/tareas/${id}`
-            : `${this.API_URL}/user/${id}`;
+        const endpoint = `${this.getEndpoint()}/${id}`;
 
         return this.http.delete(endpoint).pipe(
             tap(() => {
@@ -93,7 +86,25 @@ export class TaskService {
      * Mark task as in progress (iniciar)
      */
     iniciarTarea(id: number) {
-        const endpoint = `${this.API_URL}/admin/tareas/${id}/iniciar`;
+        const endpoint = `${this.getEndpoint()}/${id}/iniciar`;
+        return this.http.put<Tarea>(endpoint, {}).pipe(
+            tap(updatedTask => {
+                const currentTasks = this.tasksSignal();
+                const index = currentTasks.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    const newTasks = [...currentTasks];
+                    newTasks[index] = updatedTask;
+                    this.tasksSignal.set(newTasks);
+                }
+            })
+        );
+    }
+
+    /**
+     * Mark task as completed (completar)
+     */
+    completarTarea(id: number) {
+        const endpoint = `${this.getEndpoint()}/${id}/completar`;
         return this.http.put<Tarea>(endpoint, {}).pipe(
             tap(updatedTask => {
                 const currentTasks = this.tasksSignal();

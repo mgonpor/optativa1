@@ -6,10 +6,10 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Tarea, Estado } from '../../../core/models/tarea.models';
 
 @Component({
-    selector: 'app-user-task-detail',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-user-task-detail',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="max-w-3xl mx-auto">
       <!-- Back button -->
       <a 
@@ -38,7 +38,7 @@ import { Tarea, Estado } from '../../../core/models/tarea.models';
               'bg-primary-100 text-primary-700 dark:bg-primary-900/30': t.estado === Estado.EN_PROGRESO,
               'bg-success-100 text-success-700 dark:bg-success-900/30': t.estado === Estado.COMPLETADA
             }">
-            {{ getEstadoLabel(t.estado) }}
+            {{ getEstadoLabel(t.estado!) }}
           </div>
 
           <div class="p-8">
@@ -108,74 +108,74 @@ import { Tarea, Estado } from '../../../core/models/tarea.models';
       }
     </div>
   `,
-    styles: []
+  styles: []
 })
 export class UserTaskDetailComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private taskService = inject(TaskService);
-    private toastService = inject(ToastService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private taskService = inject(TaskService);
+  private toastService = inject(ToastService);
 
-    Estado = Estado;
-    task = signal<Tarea | null>(null);
-    isLoading = signal(true);
+  Estado = Estado;
+  task = signal<Tarea | null>(null);
+  isLoading = signal(true);
 
-    ngOnInit(): void {
-        const id = Number(this.route.snapshot.paramMap.get('id'));
-        if (id) {
-            this.loadTask(id);
-        } else {
-            this.router.navigate(['/user/tasks']);
-        }
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (id) {
+      this.loadTask(id);
+    } else {
+      this.router.navigate(['/user/tasks']);
     }
+  }
 
-    loadTask(id: number): void {
-        this.isLoading.set(true);
-        this.taskService.getTaskById(id).subscribe({
-            next: (t) => {
-                this.task.set(t);
-                this.isLoading.set(false);
-            },
-            error: () => {
-                this.isLoading.set(false);
-                this.router.navigate(['/user/tasks']);
-            }
-        });
-    }
+  loadTask(id: number): void {
+    this.isLoading.set(true);
+    this.taskService.getTaskById(id).subscribe({
+      next: (t) => {
+        this.task.set(t);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.router.navigate(['/user/tasks']);
+      }
+    });
+  }
 
-    iniciarTarea(id: number): void {
-        this.taskService.iniciarTarea(id).subscribe({
-            next: (updated) => {
-                this.task.set(updated);
-                this.toastService.success('Tarea iniciada correctamente');
-            }
-        });
-    }
+  iniciarTarea(id: number): void {
+    this.taskService.iniciarTarea(id).subscribe({
+      next: (updated) => {
+        this.task.set(updated);
+        this.toastService.success('Tarea iniciada correctamente');
+      }
+    });
+  }
 
-    completarTarea(id: number): void {
-        // We update via normal update for completion if there's no dedicated endpoint
-        // But since the requirements said "Modificar el estado de tareas (iniciar y completar)"
-        // And I saw "iniciar" endpoint in Admin, I'll assume for User we use the update endpoint if allowed
-        // Actually, TareaService.update checks for state change and throws error.
-        // Let me check if there is a 'completar' endpoint in the backend.
-        this.toastService.info('Funcionalidad de completar en desarrollo por el backend');
-    }
+  completarTarea(id: number): void {
+    this.taskService.completarTarea(id).subscribe({
+      next: (updated) => {
+        this.task.set(updated);
+        this.toastService.success('Tarea completada correctamente');
+      }
+    });
+  }
 
-    getEstadoLabel(estado: Estado): string {
-        switch (estado) {
-            case Estado.PENDIENTE: return 'Pendiente';
-            case Estado.EN_PROGRESO: return 'En Progreso';
-            case Estado.COMPLETADA: return 'Completada';
-            default: return estado;
-        }
+  getEstadoLabel(estado: Estado): string {
+    switch (estado) {
+      case Estado.PENDIENTE: return 'Pendiente';
+      case Estado.EN_PROGRESO: return 'En Progreso';
+      case Estado.COMPLETADA: return 'Completada';
+      default: return estado;
     }
+  }
 
-    formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    }
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
 }

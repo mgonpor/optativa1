@@ -6,10 +6,10 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Tarea, Estado } from '../../../core/models/tarea.models';
 
 @Component({
-    selector: 'app-admin-task-detail',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-admin-task-detail',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="max-w-4xl mx-auto">
       <!-- Back button -->
       <a 
@@ -89,6 +89,26 @@ import { Tarea, Estado } from '../../../core/models/tarea.models';
                 </div>
 
                 <div class="pt-6 space-y-3">
+                  @if (t.estado === Estado.PENDIENTE) {
+                    <button 
+                      (click)="iniciarTarea(t.id)"
+                      class="w-full btn-success py-2.5 flex items-center justify-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      Iniciar Tarea
+                    </button>
+                  } @else if (t.estado === Estado.EN_PROGRESO) {
+                    <button 
+                      (click)="completarTarea(t.id)"
+                      class="w-full btn-primary py-2.5 flex items-center justify-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      Completar Tarea
+                    </button>
+                  }
                   <a 
                     [routerLink]="['/admin/tasks', t.id, 'edit']"
                     class="w-full btn-secondary py-2.5 flex items-center justify-center gap-2">
@@ -113,59 +133,77 @@ import { Tarea, Estado } from '../../../core/models/tarea.models';
       }
     </div>
   `,
-    styles: []
+  styles: []
 })
 export class AdminTaskDetailComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private taskService = inject(TaskService);
-    private toastService = inject(ToastService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private taskService = inject(TaskService);
+  private toastService = inject(ToastService);
 
-    Estado = Estado;
-    task = signal<Tarea | null>(null);
-    isLoading = signal(true);
+  Estado = Estado;
+  task = signal<Tarea | null>(null);
+  isLoading = signal(true);
 
-    ngOnInit(): void {
-        const id = Number(this.route.snapshot.paramMap.get('id'));
-        if (id) {
-            this.loadTask(id);
-        } else {
-            this.router.navigate(['/admin/tasks']);
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (id) {
+      this.loadTask(id);
+    } else {
+      this.router.navigate(['/admin/tasks']);
+    }
+  }
+
+  loadTask(id: number): void {
+    this.isLoading.set(true);
+    this.taskService.getTaskById(id).subscribe({
+      next: (t) => {
+        this.task.set(t);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.router.navigate(['/admin/tasks']);
+      }
+    });
+  }
+
+  iniciarTarea(id: number): void {
+    this.taskService.iniciarTarea(id).subscribe({
+      next: (updated) => {
+        this.task.set(updated);
+        this.toastService.success('Tarea iniciada correctamente');
+      }
+    });
+  }
+
+  completarTarea(id: number): void {
+    this.taskService.completarTarea(id).subscribe({
+      next: (updated) => {
+        this.task.set(updated);
+        this.toastService.success('Tarea completada correctamente');
+      }
+    });
+  }
+
+  deleteTask(id: number): void {
+    if (confirm('¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer.')) {
+      this.taskService.deleteTask(id).subscribe({
+        next: () => {
+          this.toastService.success('Tarea eliminada correctamente');
+          this.router.navigate(['/admin/tasks']);
         }
+      });
     }
+  }
 
-    loadTask(id: number): void {
-        this.isLoading.set(true);
-        this.taskService.getTaskById(id).subscribe({
-            next: (t) => {
-                this.task.set(t);
-                this.isLoading.set(false);
-            },
-            error: () => {
-                this.isLoading.set(false);
-                this.router.navigate(['/admin/tasks']);
-            }
-        });
-    }
-
-    deleteTask(id: number): void {
-        if (confirm('¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer.')) {
-            this.taskService.deleteTask(id).subscribe({
-                next: () => {
-                    this.toastService.success('Tarea eliminada correctamente');
-                    this.router.navigate(['/admin/tasks']);
-                }
-            });
-        }
-    }
-
-    formatDate(dateString: string): string {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    }
+  formatDate(dateString: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
 }

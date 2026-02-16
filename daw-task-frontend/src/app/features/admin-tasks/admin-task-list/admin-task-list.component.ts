@@ -6,10 +6,10 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Estado, Tarea } from '../../../core/models/tarea.models';
 
 @Component({
-    selector: 'app-admin-task-list',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-admin-task-list',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="space-y-6">
       <!-- Admin Controls -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -104,9 +104,29 @@ import { Estado, Tarea } from '../../../core/models/tarea.models';
                   </td>
                   <td class="px-6 py-4 text-right">
                     <div class="flex justify-end gap-2">
+                      @if (task.estado === Estado.PENDIENTE) {
+                        <button 
+                          (click)="iniciarTarea(task.id)"
+                          class="p-2 text-success-600 hover:bg-success-50 rounded-lg transition-colors"
+                          title="Iniciar">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          </svg>
+                        </button>
+                      } @else if (task.estado === Estado.EN_PROGRESO) {
+                        <button 
+                          (click)="completarTarea(task.id)"
+                          class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          title="Completar">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </button>
+                      }
                       <a 
                         [routerLink]="['/admin/tasks', task.id]"
-                        class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        class="p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
                         title="Ver detalle">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -139,56 +159,72 @@ import { Estado, Tarea } from '../../../core/models/tarea.models';
       </div>
     </div>
   `,
-    styles: []
+  styles: []
 })
 export class AdminTaskListComponent implements OnInit {
-    private taskService = inject(TaskService);
-    private toastService = inject(ToastService);
+  private taskService = inject(TaskService);
+  private toastService = inject(ToastService);
 
-    Estado = Estado;
-    tasks = this.taskService.tasks;
-    isLoading = signal(false);
-    selectedEstado = signal<Estado | null>(null);
+  Estado = Estado;
+  tasks = this.taskService.tasks;
+  isLoading = signal(false);
+  selectedEstado = signal<Estado | null>(null);
 
-    ngOnInit(): void {
-        this.loadAllTasks();
-    }
+  ngOnInit(): void {
+    this.loadAllTasks();
+  }
 
-    loadAllTasks(): void {
-        this.selectedEstado.set(null);
-        this.isLoading.set(true);
-        this.taskService.listTasks().subscribe({
-            next: () => this.isLoading.set(false),
-            error: () => this.isLoading.set(false)
-        });
-    }
+  loadAllTasks(): void {
+    this.selectedEstado.set(null);
+    this.isLoading.set(true);
+    this.taskService.listTasks().subscribe({
+      next: () => this.isLoading.set(false),
+      error: () => this.isLoading.set(false)
+    });
+  }
 
-    loadTasksByEstado(estado: Estado): void {
-        this.selectedEstado.set(estado);
-        this.isLoading.set(true);
-        this.taskService.getTasksByEstado(estado).subscribe({
-            next: () => this.isLoading.set(false),
-            error: () => this.isLoading.set(false)
-        });
-    }
+  loadTasksByEstado(estado: Estado): void {
+    this.selectedEstado.set(estado);
+    this.isLoading.set(true);
+    this.taskService.getTasksByEstado(estado).subscribe({
+      next: () => this.isLoading.set(false),
+      error: () => this.isLoading.set(false)
+    });
+  }
 
-    deleteTask(id: number): void {
-        if (confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
-            this.taskService.deleteTask(id).subscribe({
-                next: () => {
-                    this.toastService.success('Tarea eliminada exitosamente');
-                }
-            });
+  iniciarTarea(id: number): void {
+    this.taskService.iniciarTarea(id).subscribe({
+      next: () => {
+        this.toastService.success('Tarea iniciada correctamente');
+      }
+    });
+  }
+
+  completarTarea(id: number): void {
+    this.taskService.completarTarea(id).subscribe({
+      next: () => {
+        this.toastService.success('Tarea completada correctamente');
+      }
+    });
+  }
+
+  deleteTask(id: number): void {
+    if (confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
+      this.taskService.deleteTask(id).subscribe({
+        next: () => {
+          this.toastService.success('Tarea eliminada exitosamente');
         }
+      });
     }
+  }
 
-    formatDate(dateString: string): string {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    }
+  formatDate(dateString: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
 }

@@ -167,10 +167,12 @@ export class AuthService {
         const decoded = this.decodeToken(token);
         if (!decoded) return null;
 
+        console.log(token);
+
         return {
             username: decoded.sub,
-            role: decoded.rol,
-            isAdmin: decoded.rol === 'ADMIN'
+            role: decoded.roles[0],
+            isAdmin: decoded.roles[0] === 'ROLE_ADMIN'
         };
     }
 }

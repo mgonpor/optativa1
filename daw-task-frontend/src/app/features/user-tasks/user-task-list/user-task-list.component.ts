@@ -6,10 +6,10 @@ import { ToastService } from '../../../core/services/toast.service';
 import { Estado } from '../../../core/models/tarea.models';
 
 @Component({
-    selector: 'app-user-task-list',
-    standalone: true,
-    imports: [CommonModule, RouterModule],
-    template: `
+  selector: 'app-user-task-list',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="space-y-6">
       <!-- Filter Tabs -->
       <div class="flex gap-2 overflow-x-auto pb-2">
@@ -83,7 +83,7 @@ import { Estado } from '../../../core/models/tarea.models';
                     'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300': task.estado === Estado.EN_PROGRESO,
                     'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300': task.estado === Estado.COMPLETADA
                   }">
-                  {{ getEstadoLabel(task.estado) }}
+                  {{ getEstadoLabel(task.estado!) }}
                 </span>
               </div>
 
@@ -121,6 +121,12 @@ import { Estado } from '../../../core/models/tarea.models';
                     class="flex-1 btn-success text-sm">
                     Iniciar
                   </button>
+                } @else if (task.estado === Estado.EN_PROGRESO) {
+                  <button
+                    (click)="completarTarea(task.id)"
+                    class="flex-1 btn-primary text-sm">
+                    Completar
+                  </button>
                 }
               </div>
             </div>
@@ -129,71 +135,76 @@ import { Estado } from '../../../core/models/tarea.models';
       }
     </div>
   `,
-    styles: []
+  styles: []
 })
 export class UserTaskListComponent implements OnInit {
-    private taskService = inject(TaskService);
-    private toastService = inject(ToastService);
+  private taskService = inject(TaskService);
+  private toastService = inject(ToastService);
 
-    Estado = Estado;
-    tasks = this.taskService.tasks;
-    isLoading = signal(false);
-    selectedEstado = signal<Estado | null>(null);
+  Estado = Estado;
+  tasks = this.taskService.tasks;
+  isLoading = signal(false);
+  selectedEstado = signal<Estado | null>(null);
 
-    // Computed signals for filtered tasks
-    pendientesTasks = computed(() =>
-        this.tasks().filter(t => t.estado === Estado.PENDIENTE)
-    );
-    enProgresoTasks = computed(() =>
-        this.tasks().filter(t => t.estado === Estado.EN_PROGRESO)
-    );
-    completadasTasks = computed(() =>
-        this.tasks().filter(t => t.estado === Estado.COMPLETADA)
-    );
-    filteredTasks = computed(() => {
-        const estado = this.selectedEstado();
-        if (!estado) return this.tasks();
-        return this.tasks().filter(t => t.estado === estado);
+  // Computed signals for filtered tasks
+  pendientesTasks = computed(() =>
+    this.tasks().filter(t => t.estado === Estado.PENDIENTE)
+  );
+  enProgresoTasks = computed(() =>
+    this.tasks().filter(t => t.estado === Estado.EN_PROGRESO)
+  );
+  completadasTasks = computed(() =>
+    this.tasks().filter(t => t.estado === Estado.COMPLETADA)
+  );
+  filteredTasks = computed(() => {
+    const estado = this.selectedEstado();
+    if (!estado) return this.tasks();
+    return this.tasks().filter(t => t.estado === estado);
+  });
+
+  ngOnInit(): void {
+    this.loadTasks();
+  }
+
+  loadTasks(): void {
+    this.isLoading.set(true);
+    this.taskService.listTasks().subscribe({
+      next: () => this.isLoading.set(false),
+      error: () => this.isLoading.set(false)
     });
+  }
 
-    ngOnInit(): void {
-        this.loadTasks();
-    }
+  iniciarTarea(id: number): void {
+    this.taskService.iniciarTarea(id).subscribe({
+      next: () => {
+        this.toastService.success('Tarea iniciada correctamente');
+      }
+    });
+  }
 
-    loadTasks(): void {
-        this.isLoading.set(true);
-        this.taskService.listTasks().subscribe({
-            next: () => this.isLoading.set(false),
-            error: () => this.isLoading.set(false)
-        });
-    }
+  completarTarea(id: number): void {
+    this.taskService.completarTarea(id).subscribe({
+      next: () => {
+        this.toastService.success('Tarea completada correctamente');
+      }
+    });
+  }
 
-    iniciarTarea(id: number): void {
-        this.taskService.iniciarTarea(id).subscribe({
-            next: () => {
-                this.toastService.success('Tarea iniciada correctamente');
-            },
-            error: () => {
-                // Error handled by interceptor
-            }
-        });
+  getEstadoLabel(estado: Estado): string {
+    switch (estado) {
+      case Estado.PENDIENTE: return 'Pendiente';
+      case Estado.EN_PROGRESO: return 'En Progreso';
+      case Estado.COMPLETADA: return 'Completada';
+      default: return estado;
     }
+  }
 
-    getEstadoLabel(estado: Estado): string {
-        switch (estado) {
-            case Estado.PENDIENTE: return 'Pendiente';
-            case Estado.EN_PROGRESO: return 'En Progreso';
-            case Estado.COMPLETADA: return 'Completada';
-            default: return estado;
-        }
-    }
-
-    formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    }
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
 }

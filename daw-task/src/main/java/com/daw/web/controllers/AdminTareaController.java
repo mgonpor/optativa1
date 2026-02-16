@@ -49,6 +49,11 @@ public class AdminTareaController {
 		return ResponseEntity.ok(this.tareaService.marcarEnProgreso(idTarea));
 	}
 
+	@PutMapping("/{idTarea}/completar")
+	public ResponseEntity<?> completarTarea(@PathVariable int idTarea){
+		return ResponseEntity.ok(this.tareaService.marcarCompletada(idTarea));
+	}
+
 	@GetMapping("/pendientes")
 	public ResponseEntity<?> pendientes(){
 		return ResponseEntity.ok(this.tareaService.pendientes());

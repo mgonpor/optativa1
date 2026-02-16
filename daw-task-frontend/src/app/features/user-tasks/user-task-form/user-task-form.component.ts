@@ -8,10 +8,10 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CreateTareaDTO } from '../../../core/models/tarea.models';
 
 @Component({
-    selector: 'app-user-task-form',
-    standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule],
-    template: `
+  selector: 'app-user-task-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  template: `
     <div class="max-w-2xl mx-auto">
       <!-- Back button -->
       <a 
@@ -111,57 +111,57 @@ import { CreateTareaDTO } from '../../../core/models/tarea.models';
       </div>
     </div>
   `,
-    styles: []
+  styles: []
 })
 export class UserTaskFormComponent {
-    private fb = inject(FormBuilder);
-    private taskService = inject(TaskService);
-    private authService = inject(AuthService);
-    private router = inject(Router);
-    private toastService = inject(ToastService);
+  private fb = inject(FormBuilder);
+  private taskService = inject(TaskService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private toastService = inject(ToastService);
 
-    taskForm: FormGroup;
-    isLoading = signal(false);
-    minDate = new Date().toISOString().split('T')[0];
+  taskForm: FormGroup;
+  isLoading = signal(false);
+  minDate = new Date().toISOString().split('T')[0];
 
-    constructor() {
-        this.taskForm = this.fb.group({
-            titulo: ['', Validators.required],
-            descripcion: ['', Validators.required],
-            fechaVencimiento: ['', Validators.required]
-        });
-    }
+  constructor() {
+    this.taskForm = this.fb.group({
+      titulo: ['', Validators.required],
+      descripcion: ['', Validators.required],
+      fechaVencimiento: ['', Validators.required]
+    });
+  }
 
-    onSubmit(): void {
-        if (this.taskForm.invalid) return;
+  onSubmit(): void {
+    if (this.taskForm.invalid) return;
 
-        this.isLoading.set(true);
+    this.isLoading.set(true);
 
-        // Get current user ID (this is tricky since it's not in the token, 
-        // we might need to fetch it or the backend handles it. 
-        // Looking at TareaService.create, it expects idUsuario if it exists.
-        // If not provided, it might fail or we need to find it.
-        // However, the prompt says "solo se envian los campos obligatorios".
-        // Let's assume the component will need to know the current user's ID.
-        // In our AuthService, we could decode it from JWT if it's there, or fetch once.
-        // For now, I'll send a placeholder or try to omit it if the backend auto-assigns for users.
-        // BUT TareaService.create has: if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) { throw ... }
-        // Wait, existsTareaByIdUsuario(int idUsuario) looks like it might check if user EXISTS? 
-        // Let me check that repository method name again.
+    // Get current user ID (this is tricky since it's not in the token, 
+    // we might need to fetch it or the backend handles it. 
+    // Looking at TareaService.create, it expects idUsuario if it exists.
+    // If not provided, it might fail or we need to find it.
+    // However, the prompt says "solo se envian los campos obligatorios".
+    // Let's assume the component will need to know the current user's ID.
+    // In our AuthService, we could decode it from JWT if it's there, or fetch once.
+    // For now, I'll send a placeholder or try to omit it if the backend auto-assigns for users.
+    // BUT TareaService.create has: if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) { throw ... }
+    // Wait, existsTareaByIdUsuario(int idUsuario) looks like it might check if user EXISTS? 
+    // Let me check that repository method name again.
 
-        const taskData: CreateTareaDTO = {
-            ...this.taskForm.value,
-            idUsuario: 1 // Placeholder: this needs to be the actual user ID.
-        };
+    const taskData: CreateTareaDTO = {
+      ...this.taskForm.value,
+      idUsuario: 0
+    };
 
-        this.taskService.createTask(taskData).subscribe({
-            next: () => {
-                this.toastService.success('Tarea creada exitosamente');
-                this.router.navigate(['/user/tasks']);
-            },
-            error: () => {
-                this.isLoading.set(false);
-            }
-        });
-    }
+    this.taskService.createTask(taskData).subscribe({
+      next: () => {
+        this.toastService.success('Tarea creada exitosamente');
+        this.router.navigate(['/user/tasks']);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      }
+    });
+  }
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/user/tareas")
 public class UserTareaController {
 
     @Autowired
@@ -31,15 +31,14 @@ public class UserTareaController {
         return ResponseEntity.ok(this.tareaService.createByUser(tarea));
     }
 
-    @PutMapping("/{idTarea}")
-    public ResponseEntity<?> update(@RequestBody Tarea tarea, @PathVariable int idTarea) {
-        return ResponseEntity.ok(this.tareaService.updateByUser(tarea, idTarea));
+    @PutMapping("/{idTarea}/iniciar")
+    public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea){
+        return ResponseEntity.ok(this.tareaService.marcarEnProgreso(idTarea));
     }
 
-    @DeleteMapping("/{idTarea}")
-    public ResponseEntity<?> delete(@PathVariable int idTarea) {
-        this.tareaService.deleteByUser(idTarea);
-        return ResponseEntity.ok("Tarea" + idTarea + " eliminada con éxito.");
+    @PutMapping("/{idTarea}/completar")
+    public ResponseEntity<?> completarTarea(@PathVariable int idTarea){
+        return ResponseEntity.ok(this.tareaService.marcarCompletada(idTarea));
     }
 
 }

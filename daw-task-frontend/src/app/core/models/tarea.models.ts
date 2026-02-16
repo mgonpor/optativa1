@@ -5,8 +5,8 @@ export interface Tarea {
     descripcion: string;
     fechaCreacion: string; // ISO date string
     fechaVencimiento: string; // ISO date string
-    estado: Estado;
-    idUsuario: number;
+    estado?: Estado;
+    idUsuario?: number;
 }
 
 // Task estado enum
