@@ -1,15 +1,20 @@
 package com.daw.web.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,17 +29,30 @@ public class SecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrls;
 
+    @Autowired
+    private JwtFilter jwtFilter;
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/user/*").hasRole("USER")
-                .requestMatchers(HttpMethod.GET, "/admin/*").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/user/tareas","/user/tareas/*").hasAnyRole("USER")
+                    .requestMatchers(HttpMethod.POST, "/user/tareas").hasAnyRole("USER")
+                    .requestMatchers(HttpMethod.PUT, "/user/tareas/*/iniciar", "/user/tareas/*/completar").hasAnyRole("USER")
+
+                    .requestMatchers(HttpMethod.GET, "/admin/tareas","/admin/tareas/*").hasAnyRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/admin/tareas").hasAnyRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/admin/tareas/*", "/admin/tareas/*/iniciar", "/admin/tareas/*/completar").hasAnyRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/admin/tareas/*").hasAnyRole("ADMIN")
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults());
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -63,4 +81,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
 }

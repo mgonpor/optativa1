@@ -58,7 +58,7 @@ public class TareaService {
 		if (tarea.getFechaCreacion() != null) {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
 		}
-		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
+		if(!tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
 			throw new UsuarioNotFoundException("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
 		}
 
@@ -84,7 +84,12 @@ public class TareaService {
 		if (tarea.getFechaCreacion() != null) {
 			throw new TareaException("No se puede modificar la fecha de creación. ");
 		}
-		if(tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
+		if(tarea.getIdUsuario() == 0){
+			Usuario u = this.usuarioService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+			tarea.setUsuario(u);
+			tarea.setIdUsuario(u.getId());
+		}
+		if(!tareaRepository.existsTareaByIdUsuario(tarea.getIdUsuario())) {
 			throw new UsuarioNotFoundException("Usuario con id " + tarea.getIdUsuario() + " no existe. ");
 		}
 
@@ -127,8 +132,8 @@ public class TareaService {
 		Tarea tarea = this.findById(idTarea);
 		// comprobar que sea el usuario o admin
 		if (!perteneceTarea(idTarea) ||
-				this.usuarioService.findByUsername(
-								SecurityContextHolder.getContext().getAuthentication().getName())
+						!this.usuarioService.findByUsername(
+							SecurityContextHolder.getContext().getAuthentication().getName())
 						.getRol().equals("ADMIN")) {
 			throw new TareaSecurityException("La tarea no pertenece al usuario");
 		}
@@ -139,6 +144,38 @@ public class TareaService {
 
 		tarea.setEstado(Estado.EN_PROGRESO);
 		return this.tareaRepository.save(tarea);
+	}
+
+	public Tarea marcarCompletada(int idTarea) {
+		Tarea tarea = this.findById(idTarea);
+		// comprobar que sea el usuario o admin
+		if (!perteneceTarea(idTarea) ||
+				!this.usuarioService.findByUsername(
+								SecurityContextHolder.getContext().getAuthentication().getName())
+						.getRol().equals("ADMIN")) {
+			throw new TareaSecurityException("La tarea no pertenece al usuario");
+		}
+
+		if (!tarea.getEstado().equals(Estado.EN_PROGRESO)) {
+			throw new TareaException("La tarea ya está completada o ya está en progreso");
+		}
+
+		tarea.setEstado(Estado.COMPLETADA);
+		return this.tareaRepository.save(tarea);
+	}
+	
+//	Obtener las tareas pendientes.
+	public List<Tarea> pendientes() {
+		return this.tareaRepository.findByEstado(Estado.PENDIENTE);
+	}
+	
+//	Obtener las tareas en progreso.
+	public List<Tarea> enProgreso() {
+		return this.tareaRepository.findByEstado(Estado.EN_PROGRESO);
+	}
+//	Obtener las tareas completadas.
+	public List<Tarea> completadas() {
+		return this.tareaRepository.findByEstado(Estado.COMPLETADA);
 	}
 
 	public Tarea marcarCompletada(int idTarea) {
@@ -181,24 +218,9 @@ public class TareaService {
 	}
 
 	public Tarea createByUser(Tarea tarea){
-		if (!perteneceTarea(tarea.getIdUsuario())) {
-			throw new TareaSecurityException("La tarea no pertenece al usuario");
-		}
+		Usuario u = this.usuarioService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		tarea.setIdUsuario(u.getId());
 		return this.create(tarea);
-	}
-
-	public Tarea updateByUser(Tarea tarea, int idTarea){
-		if (!perteneceTarea(idTarea)) {
-			throw new TareaSecurityException("La tarea no pertenece al usuario");
-		}
-		return this.update(tarea, idTarea);
-	}
-
-	public void deleteByUser(int idTarea){
-		if (!perteneceTarea(idTarea)) {
-			throw new TareaSecurityException("La tarea no pertenece al usuario");
-		}
-		this.delete(idTarea);
 	}
 
 	//aux solo USER
